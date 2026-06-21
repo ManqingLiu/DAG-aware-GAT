@@ -11,8 +11,7 @@
         "learning_rate": 0.001,
         "l2_penalty": 3e-06,
         "alpha": 0,
-        "loss_name": "V_statistic",
-        "dag_attention_mask": "True"
+        "loss_name": "V_statistic"
     },
     "model_transformer": {
         "name": "nmmr",

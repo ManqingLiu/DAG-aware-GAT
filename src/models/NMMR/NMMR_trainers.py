@@ -25,7 +25,9 @@ class NMMR_Trainer_DemandExperiment(object):
                  train_config_transformer: Dict[str, Any],
                  model_config_transformer: Dict[str, Any],
                  train_config_mlp: Dict[str, Any],
-                 model_config_mlp: Dict[str, Any]):
+                 model_config_mlp: Dict[str, Any],
+                 use_layernorm: bool = False,
+                 dag_attention_mask: bool = False):
 
         wandb.init(project="DAG transformer",
                    config=configs,
@@ -39,7 +41,8 @@ class NMMR_Trainer_DemandExperiment(object):
         self.train_config_mlp = train_config_mlp
         self.model_config_mlp = model_config_mlp
         self.n_sample = self.data_config['n_sample']
-        self.mask = self.train_config_transformer['dag_attention_mask']
+        self.mask = dag_attention_mask
+        self.use_layernorm = use_layernorm
         self.gpu_flg = torch.cuda.is_available()
 
         self.mse_loss = nn.MSELoss()
@@ -55,6 +58,7 @@ class NMMR_Trainer_DemandExperiment(object):
           test_dataloader: Dataloader) -> DAGTransformer:
 
         model = DAGTransformer(dag=self.dag,
+                            use_layernorm=self.use_layernorm,
                             **self.model_config_transformer)
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -142,9 +146,9 @@ class NMMR_Trainer_DemandExperiment(object):
                                                                                   self.mask
                                                                                   )
                 # print(f"Epoch: {epoch}, E_w_haw_transformer: {E_w_haw}")
-                # print oos loss for each epoch
-                print(f"Epoch: {epoch}, OOS loss transformer: {oos_loss.item()}")
-                wandb.log({'OOS loss transformer': oos_loss,
+                # print oos loss for each epoch (oos_loss is NRMSE)
+                print(f"Epoch: {epoch}, Test NRMSE: {oos_loss:.4f}")
+                wandb.log({'Test NRMSE': oos_loss,
                            #'E_w_haw_transformer':  wandb.Histogram(E_w_haw),
                            'E_ydoA':  wandb.Histogram(E_ydoA),
                           'predictions': predictions})

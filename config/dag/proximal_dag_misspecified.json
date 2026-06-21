@@ -1,0 +1,20 @@
+{
+  "nodes": ["treatment", "treatment_proxy1", "treatment_proxy2", "outcome", "outcome_proxy"],
+  "input_nodes": {
+    "treatment": {"num_categories":  10},
+    "outcome_proxy": {"num_categories":  10},
+    "outcome": {"num_categories":  10},
+    "treatment_proxy1": {"num_categories":  10},
+    "treatment_proxy2": {"num_categories":  10}
+  },
+  "output_nodes": {
+    "outcome": {"num_categories": 10}
+    },
+  "edges": {
+    "treatment": ["outcome","treatment"],
+    "outcome_proxy": ["outcome_proxy", "outcome"],
+    "treatment_proxy1": ["treatment_proxy1","treatment"],
+    "treatment_proxy2": ["treatment_proxy2","treatment"]
+  }
+}
+

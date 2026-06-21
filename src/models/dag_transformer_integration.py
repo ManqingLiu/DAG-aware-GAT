@@ -26,7 +26,9 @@ def train_pure_dag_transformer(
         sample_id: int,
         config: Dict,
         dag: Dict,
-        random_seed: int = None
+        random_seed: int = None,
+        dag_attention_mask: bool = False,
+        eval_metric: str = "nrmse"
 ) -> nn.Module:
     """
     Training function for Pure DAG Transformer
@@ -43,6 +45,8 @@ def train_pure_dag_transformer(
         config: Configuration dictionary
         dag: DAG structure
         random_seed: Random seed
+        dag_attention_mask: Whether to use DAG-based attention masking
+        eval_metric: Evaluation metric to use - "nrmse", "mae", or "both"
 
     Returns:
         Trained model, predictions, validation metrics
@@ -68,7 +72,7 @@ def train_pure_dag_transformer(
         for batch_ix, (batch_raw, batch_binned) in enumerate(train_dataloader):
             opt.zero_grad()
             batch = {k: v.to(device) for k, v in batch_raw.items()}
-            outputs = model(batch, mask=train_config["dag_attention_mask"], estimator=estimator)
+            outputs = model(batch, mask=dag_attention_mask, estimator=estimator)
 
             if estimator == "g-formula":
                 y = batch_raw['y'].to(device).float()
@@ -101,7 +105,7 @@ def train_pure_dag_transformer(
             val_loss = 0.0
             for batch_raw_val, batch_binned_val in val_dataloader:
                 batch_val = {k: v.to(device) for k, v in batch_raw_val.items()}
-                outputs_val = model(batch_val, mask=train_config["dag_attention_mask"], estimator=estimator)
+                outputs_val = model(batch_val, mask=dag_attention_mask, estimator=estimator)
 
                 if estimator == "g-formula":
                     y = batch_val['y'].to(device).float()
@@ -134,32 +138,57 @@ def train_pure_dag_transformer(
             random_seed=random_seed,
             sample_id=sample_id,
             prefix="Test",
-            estimator=estimator
+            estimator=estimator,
+            dag_attention_mask=dag_attention_mask,
+            eval_metric=eval_metric
         )
 
-        # Extract NRMSE from test metrics
+        # Extract metrics based on chosen metric type
         if estimator == "g-formula":
             test_ate = metrics_val["Test: predicted ATE for standardization"]
             test_nrmse = metrics_val["Test: NRMSE for standardization"]
+            test_mae = metrics_val["Test: MAE for standardization"]
+            test_mae_std = metrics_val["Test: MAE std for standardization"]
         elif estimator == "ipw":
             test_ate = metrics_val["Test: predicted ATE for IPW"]
             test_nrmse = metrics_val["Test: NRMSE for IPW"]
+            test_mae = metrics_val["Test: MAE for IPW"]
+            test_mae_std = metrics_val["Test: MAE std for IPW"]
         else:  # aipw
             test_ate = metrics_val["Test: predicted ATE for AIPW"]
             test_nrmse = metrics_val["Test: NRMSE for AIPW"]
+            test_mae = metrics_val["Test: MAE for AIPW"]
+            test_mae_std = metrics_val["Test: MAE std for AIPW"]
 
-        # Log average training loss and test NRMSE for the epoch
+        # Log average training loss and test metric(s) for the epoch
         avg_train_loss = total_train_loss / len(train_dataloader)
-        print(
-            f"Epoch {epoch + 1}/{train_config['n_epochs']}, Test ATE: {test_ate:.4f}, Test NRMSE: {test_nrmse:.4f}")
+        
+        # Print metrics
+        if eval_metric == "both":
+            print(
+                f"Epoch {epoch + 1}/{train_config['n_epochs']}, Test ATE: {test_ate:.4f}, "
+                f"Test NRMSE: {test_nrmse:.4f}, Test MAE: {test_mae:.4f} ± {test_mae_std:.4f}")
+        elif eval_metric == "mae":
+            print(
+                f"Epoch {epoch + 1}/{train_config['n_epochs']}, Test ATE: {test_ate:.4f}, "
+                f"Test MAE: {test_mae:.4f} ± {test_mae_std:.4f}")
+        else:  # nrmse
+            print(
+                f"Epoch {epoch + 1}/{train_config['n_epochs']}, Test ATE: {test_ate:.4f}, "
+                f"Test NRMSE: {test_nrmse:.4f}")
 
         # Log to wandb
-        wandb.log({
+        log_dict = {
             "Train Loss": avg_train_loss,
             "Test ATE": test_ate,
-            "Test NRMSE": test_nrmse,
             "Epoch": epoch
-        })
+        }
+        if eval_metric in ["nrmse", "both"]:
+            log_dict["Test NRMSE"] = test_nrmse
+        if eval_metric in ["mae", "both"]:
+            log_dict["Test MAE"] = test_mae
+            log_dict["Test MAE std"] = test_mae_std
+        wandb.log(log_dict)
 
     return model, predictions, metrics_val
 
@@ -174,7 +203,9 @@ def predict_pure_dag_transformer(
         random_seed: int,
         sample_id: int,
         prefix: str = "Test",
-        estimator: str = "ipw"
+        estimator: str = "ipw",
+        dag_attention_mask: bool = False,
+        eval_metric: str = "nrmse"
 ):
     """
     Prediction function for Pure DAG Transformer
@@ -190,6 +221,8 @@ def predict_pure_dag_transformer(
         sample_id: Sample ID
         prefix: Prefix for metrics
         estimator: Estimation method
+        dag_attention_mask: Whether to use DAG-based attention masking
+        eval_metric: Evaluation metric to use - "nrmse", "mae", or "both"
 
     Returns:
         Predictions, metrics
@@ -227,10 +260,10 @@ def predict_pure_dag_transformer(
 
     # Generate predictions based on the estimator type
     if estimator == "g-formula":
-        predictions_y0 = predict_outputs(model, train_config, dataloader_A0, estimator)['y']
+        predictions_y0 = predict_outputs(model, dataloader_A0, estimator, dag_attention_mask)['y']
         predictions_y0 = pd.DataFrame(predictions_y0, columns=['pred_y_A0'])
 
-        predictions_y1 = predict_outputs(model, train_config, dataloader_A1, estimator)['y']
+        predictions_y1 = predict_outputs(model, dataloader_A1, estimator, dag_attention_mask)['y']
         predictions_y1 = pd.DataFrame(predictions_y1, columns=['pred_y_A1'])
 
         predictions = pd.concat(
@@ -238,7 +271,7 @@ def predict_pure_dag_transformer(
             axis=1,
         )
     elif estimator == 'ipw':
-        predictions_t = predict_outputs(model, train_config, dataloader, estimator)['t']
+        predictions_t = predict_outputs(model, dataloader, estimator, dag_attention_mask)['t']
         predictions_t = pd.DataFrame(predictions_t, columns=['t_prob'])
 
         predictions = pd.concat(
@@ -246,13 +279,13 @@ def predict_pure_dag_transformer(
             axis=1,
         )
     else:  # aipw
-        predictions_y0 = predict_outputs(model, train_config, dataloader_A0, estimator)['y']
+        predictions_y0 = predict_outputs(model, dataloader_A0, estimator, dag_attention_mask)['y']
         predictions_y0 = pd.DataFrame(predictions_y0, columns=['pred_y_A0'])
 
-        predictions_y1 = predict_outputs(model, train_config, dataloader_A1, estimator)['y']
+        predictions_y1 = predict_outputs(model, dataloader_A1, estimator, dag_attention_mask)['y']
         predictions_y1 = pd.DataFrame(predictions_y1, columns=['pred_y_A1'])
 
-        predictions_t = predict_outputs(model, train_config, dataloader, estimator)['t']
+        predictions_t = predict_outputs(model, dataloader, estimator, dag_attention_mask)['t']
         predictions_t = pd.DataFrame(predictions_t, columns=['t_prob'])
 
         predictions = pd.concat(
@@ -272,14 +305,16 @@ def predict_pure_dag_transformer(
                 pseudo_ate_data,
                 sample_id,
                 prefix=prefix,
-                estimator=estimator
+                estimator=estimator,
+                eval_metric=eval_metric
             )
         else:  # "Test"
             from src.evaluate.lalonde.evaluate_metrics import calculate_test_metrics
             metrics = calculate_test_metrics(
                 predictions,
                 prefix=prefix,
-                estimator=estimator
+                estimator=estimator,
+                eval_metric=eval_metric
             )
     elif data_name == "acic":
         if prefix == "Val":
@@ -289,7 +324,8 @@ def predict_pure_dag_transformer(
                 pseudo_ate_data,
                 prefix=prefix,
                 estimator=estimator,
-                sample_id=sample_id
+                sample_id=sample_id,
+                eval_metric=eval_metric
             )
         else:  # "Test"
             from src.evaluate.acic.evaluate_metrics import calculate_test_metrics_acic
@@ -297,21 +333,22 @@ def predict_pure_dag_transformer(
                 predictions,
                 data['mu1'] - data['mu0'],
                 prefix=prefix,
-                estimator=estimator
+                estimator=estimator,
+                eval_metric=eval_metric
             )
 
     return predictions, metrics
 
 
-def predict_outputs(model, train_config, dataloader, estimator):
+def predict_outputs(model, dataloader, estimator, dag_attention_mask: bool = False):
     """
     Helper function to generate model predictions
 
     Args:
         model: Trained model
-        train_config: Training configuration
         dataloader: Data loader
         estimator: Estimation method
+        dag_attention_mask: Whether to use DAG-based attention masking
 
     Returns:
         Dictionary of predictions
@@ -324,7 +361,7 @@ def predict_outputs(model, train_config, dataloader, estimator):
     with torch.no_grad():
         for batch_raw, _ in dataloader:
             batch = {k: v.to(device) for k, v in batch_raw.items()}
-            outputs = model(batch, mask=train_config["dag_attention_mask"], estimator=estimator)
+            outputs = model(batch, mask=dag_attention_mask, estimator=estimator)
 
             # Initialize output arrays if not done yet
             if not all_outputs:

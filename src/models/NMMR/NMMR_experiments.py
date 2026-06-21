@@ -32,7 +32,9 @@ def NMMR_experiment(
     train_config_mlp: Dict[str, Any] = None,
     model_config_mlp: Dict[str, Any] = None,
     random_seed: int = 42,
-    run_mlp: bool = False
+    run_mlp: bool = False,
+    use_layernorm: bool = False,
+    dag_attention_mask: bool = False
 ):
     # Set default values if None are provided
     if train_config_mlp is None:
@@ -97,15 +99,16 @@ def NMMR_experiment(
         train_config_transformer,
         model_config_transformer,
         train_config_mlp,
-        model_config_mlp
+        model_config_mlp,
+        use_layernorm=use_layernorm,
+        dag_attention_mask=dag_attention_mask
     )
 
     model_transformer = trainer.train_transformer(train_dataloader, val_data_transformer, val_dataloader, test_dataloader)
 
     n_sample = data_config.get("n_sample", None)
-    mask = train_config_transformer["dag_attention_mask"]
     E_w_haw_transformer, oos_loss_transformer, _, predictions_transformer = trainer.predict_transformer(
-        model_transformer, data_config, val_data_transformer, dag, n_sample, test_dataloader, mask
+        model_transformer, data_config, val_data_transformer, dag, n_sample, test_dataloader, dag_attention_mask
     )
 
     E_w_haw_mlp, oos_loss_mlp = None, None  # Initialize to None

@@ -1,19 +1,19 @@
 {
-    "filepaths": {
-        "dag_g_formula": "config/dag/acic_g_formula_dag.json",
-        "dag_ipw": "config/dag/acic_ipw_dag.json",
-        "dag_aipw": "config/dag/acic_aipw_dag.json",
-        "config": "config/train/acic/acic_sample1.json",
-        "data_train_file": "data/acic/sample1/data_train_1.csv",
-        "data_val_file": "data/acic/sample1/data_val_1.csv",
-        "data_test_file": "data/acic/sample1/data_test_1.csv",
-        "pseudo_cate_file": "src/train/acic/aipw_grf_pseudo_cate.csv",
-        "predictions_g-formula": "experiments/results/acic/predictions_g_formula_sample1.csv",
-        "predictions_ipw": "experiments/results/acic/predictions_ipw_sample1.csv",
-        "predictions_aipw": "experiments/results/acic/predictions_aipw_sample1.csv"
-    },
-    "g-formula": {
-          "model": {
+  "filepaths": {
+    "dag_g_formula": "config/dag/acic_g_formula_dag.json",
+    "dag_ipw": "config/dag/acic_ipw_dag.json",
+    "dag_aipw": "config/dag/acic_aipw_dag.json",
+    "config": "config/train/acic/acic_sample1.json",
+    "data_train_file": "data/acic/sample1/data_train_1.csv",
+    "data_val_file": "data/acic/sample1/data_val_1.csv",
+    "data_test_file": "data/acic/sample1/data_test_1.csv",
+    "pseudo_cate_file": "src/train/acic/aipw_grf_pseudo_cate.csv",
+    "predictions_g-formula": "experiments/results/acic/predictions_g_formula_sample1.csv",
+    "predictions_ipw": "experiments/results/acic/predictions_ipw_sample1.csv",
+    "predictions_aipw": "experiments/results/acic/predictions_aipw_sample1.csv"
+  },
+  "g-formula": {
+    "model": {
       "network_width": 40,
       "embedding_dim": 20,
       "feedforward_dim": 40,
@@ -21,7 +21,6 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 8,
       "encoder_weight": 0
     },
@@ -29,11 +28,10 @@
       "n_epochs": 100,
       "batch_size": 64,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-6,
-      "dag_attention_mask": false
+      "l2_penalty": 1e-06
     }
-    },
-   "aipw": {
+  },
+  "aipw": {
     "model": {
       "network_width": 40,
       "embedding_dim": 10,
@@ -42,19 +40,17 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 2,
       "encoder_weight": 0.1
     },
     "training": {
       "n_epochs": 50,
       "batch_size": 64,
-      "learning_rate": 0.000001,
-      "l2_penalty": 1e-7,
-      "dag_attention_mask": true
+      "learning_rate": 1e-06,
+      "l2_penalty": 1e-07
     }
   },
-    "ipw": {
+  "ipw": {
     "model": {
       "network_width": 80,
       "embedding_dim": 40,
@@ -63,7 +59,6 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 4,
       "encoder_weight": 0
     },
@@ -71,10 +66,9 @@
       "n_epochs": 10,
       "batch_size": 64,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-4,
-      "dag_attention_mask": false
+      "l2_penalty": 0.0001
     }
   },
-    "random_seed": 42,
-    "sample_id": 1
+  "random_seed": 42,
+  "sample_id": 1
 }

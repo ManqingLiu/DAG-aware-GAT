@@ -18,6 +18,7 @@ class DAGTransformer(nn.Module):
                  input_layer_depth: int,
                  encoder_weight: float,
                  activation: str,
+                 use_layernorm: bool = False,
                  name: str = None):
 
         super(DAGTransformer, self).__init__()
@@ -36,6 +37,7 @@ class DAGTransformer(nn.Module):
         self.dropout_rate = dropout_rate
         self.encoder_weight = encoder_weight
         self.activation = activation
+        self.use_layernorm = use_layernorm
         self.name = name
 
         self.adj_matrix = torch.zeros(self.num_nodes, self.num_nodes)
@@ -68,15 +70,25 @@ class DAGTransformer(nn.Module):
         # Input embedding layer
         self.input_embedding = nn.Linear(1, embedding_dim)
 
-        # Create encoder layers
-        encoder_layer = CustomTransformerEncoderLayer(
-            d_model=self.embedding_dim,
-            nhead=self.num_heads,
-            dim_feedforward=self.feedforward_dim,
-            dropout=self.dropout_rate,
-            activation=self.activation,
-            batch_first=True
-        )
+        # Create encoder layers - use custom layer if layernorm is disabled
+        if self.use_layernorm:
+            encoder_layer = nn.TransformerEncoderLayer(
+                d_model=self.embedding_dim,
+                nhead=self.num_heads,
+                dim_feedforward=self.feedforward_dim,
+                dropout=self.dropout_rate,
+                activation=self.activation,
+                batch_first=True
+            )
+        else:
+            encoder_layer = CustomTransformerEncoderLayer(
+                d_model=self.embedding_dim,
+                nhead=self.num_heads,
+                dim_feedforward=self.feedforward_dim,
+                dropout=self.dropout_rate,
+                activation=self.activation,
+                batch_first=True
+            )
 
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
@@ -96,7 +108,7 @@ class DAGTransformer(nn.Module):
         # Process the encoder
         if mask==True:
             attn_mask = self.attn_mask.repeat(transformer_input.size(0) * self.num_heads, 1, 1)
-            attn_mask = attn_mask.to(x.device)
+            attn_mask = attn_mask.to(transformer_input.device)
             transformer_output = self.encoder(transformer_input, mask=attn_mask)
         else:
             transformer_output = self.encoder(transformer_input)

@@ -1,20 +1,20 @@
 {
-    "filepaths": {
-        "dag_g_formula": "config/dag/lalonde_cps_g_formula_dag.json",
-         "dag_ipw": "config/dag/lalonde_cps_ipw_dag.json",
-         "dag_aipw": "config/dag/lalonde_cps_aipw_dag.json",
-        "dag_cfcv": "config/dag/lalonde_cps_dag.json",
-        "config": "config/train/lalonde_cps/lalonde_cps_sample3.json",
-        "data_file": "data/lalonde/ldw_cps/ldw_cps.csv",
-        "data_train_file": "data/lalonde/ldw_cps/sample3/train_data_3.csv",
-        "data_val_file": "data/lalonde/ldw_cps/sample3/val_data_3.csv",
-        "data_test_file": "data/lalonde/ldw_cps/sample3/test_data_3.csv",
-        "pseudo_ate_file": "src/train/lalonde/lalonde_cps/aipw_grf_pseudo_ate.csv",
-        "predictions_g-formula": "experiments/results/lalonde_cps/predictions_g_formula_sample3.csv",
-        "predictions_ipw": "experiments/results/lalonde_cps/predictions_ipw_sample3.csv",
-        "predictions_aipw": "experiments/results/lalonde_cps/predictions_aipw_sample3.csv"
-    },
-     "random_seed": 42,
+  "filepaths": {
+    "dag_g_formula": "config/dag/lalonde_cps_g_formula_dag.json",
+    "dag_ipw": "config/dag/lalonde_cps_ipw_dag.json",
+    "dag_aipw": "config/dag/lalonde_cps_aipw_dag.json",
+    "dag_cfcv": "config/dag/lalonde_cps_dag.json",
+    "config": "config/train/lalonde_cps/lalonde_cps_sample3.json",
+    "data_file": "data/lalonde/ldw_cps/ldw_cps.csv",
+    "data_train_file": "data/lalonde/ldw_cps/sample3/train_data_3.csv",
+    "data_val_file": "data/lalonde/ldw_cps/sample3/val_data_3.csv",
+    "data_test_file": "data/lalonde/ldw_cps/sample3/test_data_3.csv",
+    "pseudo_ate_file": "src/train/lalonde/lalonde_cps/aipw_grf_pseudo_ate.csv",
+    "predictions_g-formula": "experiments/results/lalonde_cps/predictions_g_formula_sample3.csv",
+    "predictions_ipw": "experiments/results/lalonde_cps/predictions_ipw_sample3.csv",
+    "predictions_aipw": "experiments/results/lalonde_cps/predictions_aipw_sample3.csv"
+  },
+  "random_seed": 42,
   "aipw": {
     "model": {
       "network_width": 512,
@@ -24,7 +24,6 @@
       "num_layers": 2,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 1,
       "encoder_weight": 0
     },
@@ -32,11 +31,10 @@
       "n_epochs": 100,
       "batch_size": 256,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-6,
-      "dag_attention_mask": false
+      "l2_penalty": 1e-06
     }
   },
-   "g-formula": {
+  "g-formula": {
     "model": {
       "network_width": 512,
       "embedding_dim": 256,
@@ -45,7 +43,6 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 4,
       "encoder_weight": 0
     },
@@ -53,11 +50,10 @@
       "n_epochs": 100,
       "batch_size": 256,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-6,
-      "dag_attention_mask": false
+      "l2_penalty": 1e-06
     }
   },
- "ipw": {
+  "ipw": {
     "model": {
       "network_width": 512,
       "embedding_dim": 256,
@@ -66,7 +62,6 @@
       "num_layers": 4,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 4,
       "encoder_weight": 0.01
     },
@@ -74,8 +69,7 @@
       "n_epochs": 5,
       "batch_size": 64,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-6,
-      "dag_attention_mask": true
+      "l2_penalty": 1e-06
     }
   }
 }

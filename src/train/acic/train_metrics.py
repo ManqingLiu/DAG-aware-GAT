@@ -30,7 +30,8 @@ def calculate_val_metrics_acic(
     pseudo_ite: pd.DataFrame,
     prefix: str,
     estimator: str,
-    sample_id: int
+    sample_id: int,
+    eval_metric: str = "nrmse"
 ) -> Dict[str, float]:
     predictions['ite'] = predictions['mu1']-predictions['mu0']
     pseudo_ite_value = pseudo_ite.iloc[sample_id]["ate"]

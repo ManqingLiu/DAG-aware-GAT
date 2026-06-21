@@ -1,0 +1,19 @@
+DAG-Aware Transformer Attention Analysis
+==================================================
+
+Model Architecture:
+- Number of nodes: 4
+- Embedding dimension: 32
+- Number of heads: 2
+- Number of layers: 2
+
+DAG Structure:
+- Edges: {'X1': ['A', 'Y'], 'X2': ['A', 'Y'], 'A': ['Y']}
+- Node IDs: {'X1': 0, 'X2': 1, 'A': 2, 'Y': 3}
+- Adjacency matrix shape: (4, 4)
+- Attention mask sparsity: 68.8%
+
+Attention Statistics:
+- Max attention weight: 0.557
+- Number of non-zero weights: 5
+- Sparsity: 68.8%

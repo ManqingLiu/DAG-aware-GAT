@@ -1,19 +1,19 @@
 {
-    "filepaths": {
-        "dag_g_formula": "config/dag/lalonde_psid_g_formula_dag.json",
-        "dag_ipw": "config/dag/lalonde_psid_ipw_dag.json",
-        "dag_aipw": "config/dag/lalonde_psid_aipw_dag.json",
-        "config": "config/train/lalonde_psid/lalonde_psid_sample7.json",
-        "data_file": "data/lalonde/ldw_psid/ldw_psid.csv",
-        "data_train_file": "data/lalonde/ldw_psid/sample7/train_data_7.csv",
-        "data_val_file": "data/lalonde/ldw_psid/sample7/val_data_7.csv",
-        "data_test_file": "data/lalonde/ldw_psid/sample7/test_data_7.csv",
-        "pseudo_ate_file": "src/train/lalonde/lalonde_psid/aipw_grf_pseudo_ate.csv",
-        "predictions_g-formula": "experiments/results/lalonde_psid/predictions_g_formula_sample7.csv",
-        "predictions_ipw": "experiments/results/lalonde_psid/predictions_ipw_sample7.csv",
-        "predictions_aipw": "experiments/results/lalonde_psid/predictions_aipw_sample7.csv"
-    },
-     "g-formula": {
+  "filepaths": {
+    "dag_g_formula": "config/dag/lalonde_psid_g_formula_dag.json",
+    "dag_ipw": "config/dag/lalonde_psid_ipw_dag.json",
+    "dag_aipw": "config/dag/lalonde_psid_aipw_dag.json",
+    "config": "config/train/lalonde_psid/lalonde_psid_sample7.json",
+    "data_file": "data/lalonde/ldw_psid/ldw_psid.csv",
+    "data_train_file": "data/lalonde/ldw_psid/sample7/train_data_7.csv",
+    "data_val_file": "data/lalonde/ldw_psid/sample7/val_data_7.csv",
+    "data_test_file": "data/lalonde/ldw_psid/sample7/test_data_7.csv",
+    "pseudo_ate_file": "src/train/lalonde/lalonde_psid/aipw_grf_pseudo_ate.csv",
+    "predictions_g-formula": "experiments/results/lalonde_psid/predictions_g_formula_sample7.csv",
+    "predictions_ipw": "experiments/results/lalonde_psid/predictions_ipw_sample7.csv",
+    "predictions_aipw": "experiments/results/lalonde_psid/predictions_aipw_sample7.csv"
+  },
+  "g-formula": {
     "model": {
       "network_width": 512,
       "embedding_dim": 256,
@@ -22,7 +22,6 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 1,
       "encoder_weight": 0
     },
@@ -30,11 +29,10 @@
       "n_epochs": 100,
       "batch_size": 64,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-4,
-      "dag_attention_mask": true
+      "l2_penalty": 0.0001
     }
-    },
-    "aipw": {
+  },
+  "aipw": {
     "model": {
       "network_width": 10,
       "embedding_dim": 10,
@@ -43,7 +41,6 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 1,
       "encoder_weight": 0
     },
@@ -51,11 +48,10 @@
       "n_epochs": 45,
       "batch_size": 64,
       "learning_rate": 0.001,
-      "l2_penalty": 1e-6,
-      "dag_attention_mask": true
+      "l2_penalty": 1e-06
     }
   },
-     "ipw": {
+  "ipw": {
     "model": {
       "network_width": 10,
       "embedding_dim": 10,
@@ -64,7 +60,6 @@
       "num_layers": 1,
       "dropout_rate": 0.001,
       "activation": "relu",
-      "use_layernorm": false,
       "input_layer_depth": 1,
       "encoder_weight": 0
     },
@@ -72,10 +67,9 @@
       "n_epochs": 10,
       "batch_size": 64,
       "learning_rate": 0.0001,
-      "l2_penalty": 1e-6,
-      "dag_attention_mask": true
+      "l2_penalty": 1e-06
     }
   },
-    "random_seed": 42,
-    "sample_id": 1
+  "random_seed": 42,
+  "sample_id": 1
 }
