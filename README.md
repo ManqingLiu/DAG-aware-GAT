@@ -1,22 +1,33 @@
-# DAG-aware Transformer for Causal Inference
+# DAG-aware GAT for Causal Effect Estimation
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Python Version](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)
 
 ## Overview
 
-This repository contains the implementation of a DAG-aware Transformer model for causal inference, as described 
-in our paper [DAG aware Transformer for Causal Effect Estimation](https://arxiv.org/abs/2410.10044). Our model 
-incorporates causal structure into the attention mechanism, allowing for more accurate modeling of 
-causal relationships in various estimation frameworks including G-formula, Inverse Probability Weighting (IPW), 
-and Augmented Inverse Probability Weighting (AIPW).
+This repository contains the implementation of a **DAG-aware Graph Attention Network (GAT)** for causal effect
+estimation, as described in our paper *DAG-aware GAT for Causal Effect Estimation* (accepted at
+[*Transactions on Machine Learning Research*](https://openreview.net/); arXiv preprint:
+[2410.10044](https://arxiv.org/abs/2410.10044)).
+
+Our model embeds the causal DAG as a **hard structural inductive bias** directly into the multi-head attention
+mechanism: attention scores between variables that are not causally connected are masked to negative infinity,
+so each node's representation is strictly a function of its causal ancestors. In contrast to standard Transformers,
+the GAT encoder **omits Layer Normalization** to preserve the heterogeneous scales of causal variables (e.g.,
+binary treatment indicators vs. continuous outcomes), which we find is critical for unbiased propensity score and
+bridge-function estimation.
 
 ## Key Features
 
-- DAG-aware attention mechanism
-- Support for multiple causal inference methods (G-formula, IPW, AIPW)
-- Flexible architecture for both joint and separate training of propensity score and outcome models
-- Extension to proximal causal inference
+- DAG-constrained multi-head attention (DAG as a hard inductive bias on information flow)
+- LayerNorm-free GAT encoder, preserving heterogeneous variable scales
+- Support for multiple causal inference methods: G-formula, IPW, and AIPW
+- Joint or separate training of propensity score and outcome models for AIPW
+- Proximal causal inference via the Neural Maximum Moment Restriction (NMMR) framework, with both
+  U-statistic and V-statistic variants
+- Baselines included for comparison: GRF, MLP, standard GNN, Transformer (with LayerNorm), and a standard
+  fully-connected GAT (no DAG mask)
+- DAG misspecification ablations for proximal inference (reversed treatment-outcome edge, missing proxy edge)
 
 ## Project Structure
 
@@ -58,7 +69,10 @@ Our project is organized as follows:
 - `src/`: The main source code directory.
   - `data/`: Data loading and preprocessing modules.
   - `evaluate/`: Evaluation metrics and functions.
-  - `models/`: DAG-aware Transformer model and baseline models along with their loss functions.
+  - `models/`: DAG-aware GAT model, baseline architectures, and their loss functions. Notable files:
+    - `dag_transformer_integration.py`: training/prediction interface for the DAG-aware GAT encoder.
+    - `gat_baseline.py` / `gat_integration.py`: standard fully-connected GAT baseline (no DAG mask).
+    - `NMMR/`: proximal-inference estimator (Neural Maximum Moment Restriction; U- and V-statistic variants).
   - `train/`: Programs to compute pseudo ATE/CATE (see descriptions in Hyper-parameter tuning section in our paper) 
   and the computed values. 
   - `utils/`: Utility functions for data processing and model training.
@@ -187,13 +201,19 @@ python3 src/experiment_proximal.py \
 
 - **DAG_CONFIG_FILE**: The configuration file for the Directed Acyclic Graph (DAG)
   - Location: `config/dag/`
-  - Example: `proximal_dag_z.json`
+  - Examples:
+    - `proximal_dag_z.json` — correctly specified DAG.
+    - `proximal_dag_misspecified.json` — reversed treatment/outcome edge ($Y \to A$ instead of $A \to Y$);
+      used for the structural-misspecification ablation in the paper.
+    - `proximal_dag_misspecified2.json` — outcome proxy edge $W \to Y$ removed, breaking a key proximal
+      identification condition.
 
-- **STATISTICS**: The type of statistics used in proximal inference
-  - Options: `u` (U-statistics) or `v` (V-statistics)
+- **STATISTICS**: The type of statistics used in the NMMR objective (see Eq. NMMR-U / NMMR-V in the paper)
+  - Options: `u` (U-statistic; zeros out the kernel-matrix diagonal to avoid self-correlation)
+  - or `v` (V-statistic; includes the diagonal; often more numerically stable)
 
 - **SAMPLE_SIZE**: The size of the sample used in the experiment
-  - Example values: `50000`, `100000`, etc.
+  - Supported values: `1000`, `5000`, `10000`, `50000` (the camera-ready paper reports `1000`, `5000`, `10000`)
 
 - **RESULTS_DIRECTORY**: The directory where results will be stored
   - Default: `experiments/results/proximal`
@@ -215,17 +235,18 @@ You can also run the experiment using the provided script `scripts/myjob.sh` for
 
 ## Citation
 
-If you use this code in your research, please cite our paper:
+Our paper *DAG-aware GAT for Causal Effect Estimation* has been accepted at **Transactions on Machine Learning
+Research (TMLR)**. The official TMLR/OpenReview citation will be added here once the camera-ready DOI is issued.
+In the meantime, please cite the arXiv preprint:
 
 ```bibtex
-@misc{liu2024dagawaretransformercausaleffect,
-      title={DAG-aware Transformer for Causal Effect Estimation}, 
+@article{liu2024dagaware,
+      title={DAG-aware GAT for Causal Effect Estimation},
       author={Manqing Liu and David R. Bellamy and Andrew L. Beam},
+      journal={arXiv preprint arXiv:2410.10044},
       year={2024},
-      eprint={2410.10044},
-      archivePrefix={arXiv},
-      primaryClass={stat.ML},
-      url={https://arxiv.org/abs/2410.10044}, 
+      url={https://arxiv.org/abs/2410.10044},
+      note={Accepted at Transactions on Machine Learning Research (TMLR)}
 }
 ```
 
